@@ -9,4 +9,4 @@ Wikimedia's  [EventStreams](https://wikitech.wikimedia.org/wiki/Event_Platform/E
 live recent changes feed.
 
 ## License
-grr is (C) 2020 Kunal Mehta, released under the GPLv3 or any later version, see COPYING for details.
+eventstreams is (C) 2020 Kunal Mehta, released under the GPLv3 or any later version, see COPYING for details.
