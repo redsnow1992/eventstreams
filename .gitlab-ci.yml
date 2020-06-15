@@ -1,0 +1,74 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  CARGO_HOME: $CI_PROJECT_DIR/.cargo
+
+cache:
+  paths:
+    - .cargo
+    - target
+
+rust-latest:
+  stage: build
+  image: rust:latest
+  before_script:
+    - rustup component add rustfmt
+    - rustup component add clippy
+    - cargo install cargo-tarpaulin
+  script:
+    - cargo fmt -- --check
+    - cargo clippy --all-features -- -D warnings
+    - cargo build --all-features --verbose
+    - cargo tarpaulin --all-features --out=Xml --out=Html --output-dir=coverage
+  artifacts:
+    paths:
+      - coverage/
+    reports:
+      cobertura: coverage/cobertura.xml
+
+rust-nightly:
+  stage: build
+  image: rustlang/rust:nightly
+  script: &do
+    - cargo build --all-targets --verbose
+    - cargo test --all-targets --verbose
+  allow_failure: true
+
+rust-fedora:
+  stage: build
+  image: fedora:latest
+  before_script:
+    - dnf install cargo openssl-devel -y
+  script: *do
+
+rust-debian:
+  stage: build
+  image: debian:unstable
+  before_script:
+    - apt-get update -qq && apt-get install cargo libssl-dev pkg-config -y -qq
+  script: *do
+
+rust-security:
+  stage: build
+  image: rust:latest
+  before_script:
+    - cargo install cargo-audit
+  script:
+    - cargo audit -D --ignore RUSTSEC-2020-0016
+
+pages:
+  stage: deploy
+  image: debian:stable-slim
+  dependencies:
+    - rust-latest
+  script:
+    - mkdir public/
+    - mv coverage/tarpaulin-report.html coverage/index.html
+    - mv coverage/ public/coverage/
+  artifacts:
+    paths:
+      - public
+  only:
+    - master

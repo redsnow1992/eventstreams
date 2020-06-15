@@ -1,0 +1,20 @@
+[package]
+name = "eventstreams"
+version = "0.1.0"
+authors = ["Kunal Mehta <legoktm@member.fsf.org>"]
+edition = "2018"
+license = "GPL-3.0-or-later"
+repository = "https://gitlab.com/legoktm/eventstreams"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sse-client = { version = "1.1.0", features= ["native-tls"]}
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+mediawiki = { version = "0.1.28", optional = true }
+
+[features]
+default = []
+mediawiki-api = ["mediawiki"]
