@@ -16,12 +16,21 @@ rust-latest:
   before_script:
     - rustup component add rustfmt
     - rustup component add clippy
-    - cargo install cargo-tarpaulin
   script:
     - cargo fmt -- --check
     - cargo clippy --all-features -- -D warnings
     - cargo build --all-features --verbose
+    - cargo test --all-targets --verbose
+
+rust-coverage:
+  stage: deploy
+  image: rust:latest
+  before_script:
+    - cargo install cargo-tarpaulin
+  script:
     - cargo tarpaulin --all-features --out=Xml --out=Html --output-dir=coverage
+  after_script:
+    - mv coverage/tarpaulin-report.html coverage/index.html
   artifacts:
     paths:
       - coverage/
@@ -62,10 +71,9 @@ pages:
   stage: deploy
   image: debian:stable-slim
   dependencies:
-    - rust-latest
+    - rust-coverage
   script:
     - mkdir public/
-    - mv coverage/tarpaulin-report.html coverage/index.html
     - mv coverage/ public/coverage/
   artifacts:
     paths:
