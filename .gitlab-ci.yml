@@ -23,7 +23,7 @@ rust-latest:
     - cargo test --all-targets --verbose
 
 rust-coverage:
-  stage: deploy
+  stage: build
   image: rust:latest
   before_script:
     - cargo install cargo-tarpaulin
