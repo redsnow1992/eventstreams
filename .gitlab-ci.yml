@@ -22,21 +22,6 @@ rust-latest:
     - cargo build --all-features --verbose
     - cargo test --all-targets --verbose
 
-rust-coverage:
-  stage: build
-  image: rust:latest
-  before_script:
-    - cargo install cargo-tarpaulin
-  script:
-    - cargo tarpaulin --all-features --out=Xml --out=Html --output-dir=coverage
-  after_script:
-    - mv coverage/tarpaulin-report.html coverage/index.html
-  artifacts:
-    paths:
-      - coverage/
-    reports:
-      cobertura: coverage/cobertura.xml
-
 rust-nightly:
   stage: build
   image: rustlang/rust:nightly
@@ -66,17 +51,3 @@ rust-security:
     - cargo install cargo-audit
   script:
     - cargo audit -D --ignore RUSTSEC-2020-0016
-
-pages:
-  stage: deploy
-  image: debian:stable-slim
-  dependencies:
-    - rust-coverage
-  script:
-    - mkdir public/
-    - mv coverage/ public/coverage/
-  artifacts:
-    paths:
-      - public
-  only:
-    - master
