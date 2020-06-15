@@ -1,6 +1,7 @@
 eventstreams
 ============
 [![crates.io](https://img.shields.io/crates/v/eventstreams.svg)](https://crates.io/crates/eventstreams)
+[![docs.rs](https://docs.rs/eventstreams/badge.svg)](https://docs.rs/eventstreams)
 [![pipeline status](https://gitlab.com/legoktm/eventstreams/badges/master/pipeline.svg)](https://gitlab.com/legoktm/eventstreams/-/commits/master)
 [![coverage report](https://gitlab.com/legoktm/eventstreams/badges/master/coverage.svg)](https://legoktm.gitlab.io/eventstreams/coverage/)
 
