@@ -1,11 +1,14 @@
 [package]
 name = "eventstreams"
+description = "Client for Wikimedia's EventStream recent changes feed"
 version = "0.1.0"
 authors = ["Kunal Mehta <legoktm@member.fsf.org>"]
 edition = "2018"
 license = "GPL-3.0-or-later"
 repository = "https://gitlab.com/legoktm/eventstreams"
 readme = "README.md"
+keywords = ["wikimedia", "eventstream", "mediawiki"]
+categories = ["api-bindings"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
