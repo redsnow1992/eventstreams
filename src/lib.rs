@@ -108,7 +108,10 @@ impl EditEvent {
     }
 
     fn endpoint(&self, path: &str) -> String {
-        format!("{}{}/{}.php", self.server_url, self.server_script_path, path)
+        format!(
+            "{}{}/{}.php",
+            self.server_url, self.server_script_path, path
+        )
     }
 
     /// URL to the wiki's api.php ("[Action API](https://www.mediawiki.org/wiki/API:Main_page)") endpoint
@@ -122,7 +125,12 @@ impl EditEvent {
 
     /// URL to the diff for this edit, formatted for human readability
     pub fn diff_url(&self) -> String {
-        format!("{}?title={}&diff={}", self.endpoint("index"), self.title_for_url(), self.revision.new)
+        format!(
+            "{}?title={}&diff={}",
+            self.endpoint("index"),
+            self.title_for_url(),
+            self.revision.new
+        )
     }
 
     /// URL to the diff for this edit, as short as possible
