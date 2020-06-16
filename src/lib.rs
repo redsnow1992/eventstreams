@@ -107,9 +107,27 @@ impl EditEvent {
         self.patrolled.unwrap_or(false)
     }
 
+    fn endpoint(&self, path: &str) -> String {
+        format!("{}{}/{}.php", self.server_url, self.server_script_path, path)
+    }
+
     /// URL to the wiki's api.php ("[Action API](https://www.mediawiki.org/wiki/API:Main_page)") endpoint
     pub fn api_url(&self) -> String {
-        format!("{}{}/api.php", self.server_url, self.server_script_path)
+        self.endpoint("api")
+    }
+
+    fn title_for_url(&self) -> String {
+        self.title.replace(" ", "_")
+    }
+
+    /// URL to the diff for this edit, formatted for human readability
+    pub fn diff_url(&self) -> String {
+        format!("{}?title={}&diff={}", self.endpoint("index"), self.title_for_url(), self.revision.new)
+    }
+
+    /// URL to the diff for this edit, as short as possible
+    pub fn short_diff_url(&self) -> String {
+        format!("{}?diff={}", self.server_url, self.revision.new)
     }
 
     /// Get a [`mediawiki::api::Api`](https://docs.rs/mediawiki/latest/mediawiki/api/struct.Api.html) instance
