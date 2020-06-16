@@ -67,7 +67,7 @@ pub struct EditEvent {
     #[serde(rename = "type")]
     type_: String,
     /// Namespace ID
-    pub namespace: u32,
+    pub namespace: i32,
     /// Prefixed title (includes namespace name)
     pub title: String,
     /// Edit summary ([comment_text](https://www.mediawiki.org/wiki/Manual:Comment_table#comment_text))
@@ -138,7 +138,7 @@ pub struct LogEvent {
     #[serde(rename = "type")]
     type_: String,
     /// Namespace ID
-    pub namespace: u32,
+    pub namespace: i32,
     /// Prefixed title (includes namespace name)
     pub title: String,
     /// Edit summary ([comment_text](https://www.mediawiki.org/wiki/Manual:Comment_table#comment_text))
