@@ -6,3 +6,9 @@ variables:
   DNF_PACKAGES: openssl-devel
   CARGO_AUDIT: --ignore RUSTSEC-2020-0016
   SKIP_COVERAGE: "yes"
+
+rust-coverage:
+  extends: .rust-coverage
+
+pages:
+  extends: .pages
