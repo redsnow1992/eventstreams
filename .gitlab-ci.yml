@@ -9,6 +9,7 @@ variables:
 
 rust-coverage:
   extends: .rust-coverage
+  allow_failure: true
 
 pages:
   extends: .pages
