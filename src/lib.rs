@@ -44,12 +44,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //!     );
 //! });
 //! ```
-//!
-//! # Optional features
-//! An optional `mediawiki-api` feature provides tighter integration with the
-//! [`mediawiki`](https://docs.rs/mediawiki/) crate.
-#[cfg(feature = "mediawiki-api")]
-use mediawiki::{api::Api, title::Title};
 use serde::Deserialize;
 use serde_json::Value;
 use sse_client::EventSource;
@@ -137,22 +131,6 @@ impl EditEvent {
     pub fn short_diff_url(&self) -> String {
         format!("{}?diff={}", self.server_url, self.revision.new)
     }
-
-    /// Get a [`mediawiki::api::Api`](https://docs.rs/mediawiki/latest/mediawiki/api/struct.Api.html) instance
-    /// # Optional
-    /// Requires `mediawiki-api` feature
-    #[cfg(feature = "mediawiki-api")]
-    pub fn api(&self) -> Api {
-        Api::new(&self.api_url()).unwrap()
-    }
-
-    /// Get a [`mediawiki::title::Title`](https://docs.rs/mediawiki/latest/mediawiki/title/struct.Title.html) instance
-    /// # Optional
-    /// Requires `mediawiki-api` feature
-    #[cfg(feature = "mediawiki-api")]
-    pub fn get_title(&self) -> Title {
-        Title::new_from_full(&self.title, &self.api())
-    }
 }
 
 /// Represents a log entry
@@ -196,22 +174,6 @@ impl LogEvent {
     /// URL to the wiki's api.php ("[Action API](https://www.mediawiki.org/wiki/API:Main_page)") endpoint
     pub fn api_url(&self) -> String {
         format!("{}{}/api.php", self.server_url, self.server_script_path)
-    }
-
-    /// Get a [`mediawiki::api::Api`](https://docs.rs/mediawiki/latest/mediawiki/api/struct.Api.html) instance
-    /// # Optional
-    /// Requires `mediawiki-api` feature
-    #[cfg(feature = "mediawiki-api")]
-    pub fn api(&self) -> Api {
-        Api::new(&self.api_url()).unwrap()
-    }
-
-    /// Get a [`mediawiki::title::Title`](https://docs.rs/mediawiki/latest/mediawiki/title/struct.Title.html) instance
-    /// # Optional
-    /// Requires `mediawiki-api` feature
-    #[cfg(feature = "mediawiki-api")]
-    pub fn get_title(&self) -> Title {
-        Title::new_from_full(&self.title, &self.api())
     }
 }
 
