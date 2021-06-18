@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 Kunal Mehta <legoktm@member.fsf.org>
+Copyright (C) 2020-2021 Kunal Mehta <legoktm@member.fsf.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,29 +17,30 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //! Dump the EventStream feed to your terminal.
 //!
 //! Run with `cargo run --example cli`
-use eventstreams::EventStream;
-use std::thread;
+use eventstreams::{Event, StreamExt};
 
-fn main() {
-    let stream = EventStream::new();
-    stream.on_edit(|edit| {
-        println!(
-            "{}: {} edited {}",
-            &edit.server_name, &edit.user, &edit.title
-        );
-    });
-    stream.on_log(|log| {
-        println!(
-            "{}: {} did {}/{} on {}",
-            &log.server_name,
-            &log.user,
-            &log.log_type,
-            &log.log_action,
-            &log.title
-        )
-    });
-    stream.source.on_open(|| {
-        println!("Connected.");
-    });
-    thread::park();
+#[tokio::main]
+async fn main() {
+    let stream = eventstreams::stream();
+    eventstreams::pin_mut!(stream);
+    while let Some(event) = stream.next().await {
+        match event {
+            Event::Edit(edit) => {
+                println!(
+                    "{}: {} edited {}",
+                    &edit.server_name, &edit.user, &edit.title
+                );
+            }
+            Event::Log(log) => {
+                println!(
+                    "{}: {} performed {}/{} on {}",
+                    &log.server_name,
+                    &log.user,
+                    &log.log_type,
+                    &log.log_action,
+                    &log.title
+                );
+            }
+        }
+    }
 }

@@ -13,6 +13,12 @@ categories = ["api-bindings"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sse-client = { version = "1.1.0", features= ["native-tls"]}
+async-stream = "0.3.2"
+futures = "0.3.15"
+futures-util = "0.3.15"
+surf-sse = "1.0.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+[dev-dependencies]
+tokio = {version = "1.0", features = ["full"]}

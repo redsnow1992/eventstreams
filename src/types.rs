@@ -17,6 +17,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use serde::Deserialize;
 use serde_json::Value;
 
+#[derive(Debug)]
+pub enum Event {
+    Edit(EditEvent),
+    Log(LogEvent),
+}
+
 /// Represents an edit
 #[derive(Clone, Debug, Deserialize)]
 pub struct EditEvent {

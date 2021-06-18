@@ -20,161 +20,71 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //! Wikimedia's  [EventStreams](https://wikitech.wikimedia.org/wiki/Event_Platform/EventStreams)
 //! live recent changes feed.
 //!
-//! Clients can add listeners for edit and log entry events:
 //! ```no_run
-//! use eventstreams::EventStream;
+//! # async fn doc() {
+//! use eventstreams::{Event,StreamExt};
 //!
-//! let stream = EventStream::new();
-//! stream.on_edit(|edit| {
-//!     println!(
-//!         "{}: {} edited {}",
-//!         &edit.server_name, &edit.user, &edit.title
-//!     );
-//! });
-//! ```
-//!
-//! It's straightforward to filter events if you only care about a single wiki:
-//! ```no_run
-//! # use eventstreams::EventStream;
-//! let stream = EventStream::new();
-//! stream.on_wiki_edit("en.wikipedia.org", |edit| {
-//!     println!(
-//!         "{}: {} edited {}",
-//!         &edit.server_name, &edit.user, &edit.title
-//!     );
-//! });
+//! let stream = eventstreams::stream();
+//! eventstreams::pin_mut!(stream);
+//! while let Some(event) = stream.next().await {
+//!    match event {
+//!        Event::Edit(edit) => {
+//!            println!(
+//!                "{}: {} edited {}",
+//!                &edit.server_name, &edit.user, &edit.title
+//!            );
+//!        }
+//!        Event::Log(log) => {
+//!            println!(
+//!                "{}: {} performed {}/{} on {}",
+//!                &log.server_name,
+//!                &log.user,
+//!                &log.log_type,
+//!                &log.log_action,
+//!                &log.title
+//!            );
+//!        }
+//!    }
+//! }
+//! # }
 //! ```
 mod types;
 
+use async_stream::stream;
+pub use futures::{Stream, StreamExt};
+pub use futures_util::pin_mut;
 use serde_json::Value;
-use sse_client::EventSource;
-use std::marker::Send;
-use types::{EditEvent, LogEvent};
+use surf_sse::{Event as SSEEvent, EventSource};
+pub use types::{EditEvent, Event, LogEvent};
 
-pub struct EventStream {
-    /// Allows manipulation/control of upstream [`sse_client:EventSource`](https://docs.rs/sse-client/1/sse_client/struct.EventSource.html).
-    pub source: EventSource,
-}
-
-fn handle_line(line: &str) -> Option<Value> {
-    if line.is_empty() {
+fn handle_event(event: SSEEvent) -> Option<Event> {
+    if event.data.is_empty() {
         return None;
     }
-
-    match serde_json::from_str(line) {
-        Ok(val) => Some(val),
-        // TODO: figure out why we sometimes get truncated lines
-        Err(_) => None,
+    let value: Value = match serde_json::from_str(&event.data) {
+        Ok(value) => value,
+        Err(_) => return None,
+    };
+    if value["type"] == "log" {
+        Some(Event::Log(serde_json::from_value(value).unwrap()))
+    } else if value["type"] == "edit" {
+        Some(Event::Edit(serde_json::from_value(value).unwrap()))
+    } else {
+        None
     }
 }
 
-impl EventStream {
-    /// Create new `EventStream` instance
-    pub fn new() -> EventStream {
-        EventStream {
-            source: EventSource::new(
-                "https://stream.wikimedia.org/v2/stream/recentchange",
-            )
+pub fn stream() -> impl Stream<Item = Event> {
+    let source = EventSource::new(
+        "https://stream.wikimedia.org/v2/stream/recentchange"
+            .parse()
             .unwrap(),
+    );
+    stream! {
+        for await event in source {
+            if let Some(event) = handle_event(event.unwrap()) {
+                yield event;
+            }
         }
-    }
-
-    /// Set a listener for edits on a specific wiki using the server name
-    ///
-    /// # Example
-    /// ```no_run
-    /// # use eventstreams::EventStream;
-    /// # let stream = EventStream::new();
-    /// stream.on_wiki_edit("www.wikidata.org", |edit| {
-    ///     dbg!(edit);
-    /// });
-    /// ```
-    pub fn on_wiki_edit<F>(&self, wiki: &'static str, listener: F)
-    where
-        F: Fn(EditEvent) + Send + 'static,
-    {
-        self.on_edit(move |edit| {
-            if edit.server_name == wiki {
-                listener(edit);
-            }
-        })
-    }
-
-    /// Set a listener for all edits
-    ///
-    /// # Example
-    /// ```no_run
-    /// # use eventstreams::EventStream;
-    /// # let stream = EventStream::new();
-    /// stream.on_edit(|edit| {
-    ///     dbg!(edit);
-    /// });
-    /// ```
-    pub fn on_edit<F>(&self, listener: F)
-    where
-        F: Fn(EditEvent) + Send + 'static,
-    {
-        self.source.on_message(move |message| {
-            let data = handle_line(&message.data);
-            if let Some(value) = data {
-                if value["type"] == "edit" {
-                    let edit: EditEvent =
-                        serde_json::from_value(value).unwrap();
-                    listener(edit);
-                }
-            }
-        });
-    }
-
-    pub fn on_wiki_log<F>(&self, wiki: &'static str, listener: F)
-    where
-        F: Fn(LogEvent) + Send + 'static,
-    {
-        self.on_log(move |log| {
-            if log.server_name == wiki {
-                listener(log);
-            }
-        })
-    }
-
-    pub fn on_log<F>(&self, listener: F)
-    where
-        F: Fn(LogEvent) + Send + 'static,
-    {
-        self.source.on_message(move |message| {
-            let data = handle_line(&message.data);
-            if let Some(value) = data {
-                if value["type"] == "log" {
-                    let log: LogEvent = serde_json::from_value(value).unwrap();
-                    listener(log);
-                }
-            }
-        })
-    }
-
-    /// Close the connection. Wrapper around [`sse_client::EventSource#close`](https://docs.rs/sse-client/1/sse_client/struct.EventSource.html#method.close).
-    pub fn close(&self) {
-        self.source.close();
-    }
-}
-
-impl Default for EventStream {
-    fn default() -> Self {
-        EventStream::new()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::handle_line;
-
-    #[test]
-    fn test_handle_line() {
-        assert_eq!(None, handle_line(""));
-        assert_eq!(None, handle_line("{invalid JSON"));
-        assert_eq!(
-            serde_json::json!({"foo": "bar"}),
-            handle_line(r#"{"foo": "bar"}"#).unwrap()
-        )
     }
 }
