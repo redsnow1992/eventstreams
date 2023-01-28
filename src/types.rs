@@ -178,5 +178,5 @@ struct EventMeta {
     stream: String,
     topic: String,
     partition: u32,
-    offset: u32,
+    offset: u64,
 }
